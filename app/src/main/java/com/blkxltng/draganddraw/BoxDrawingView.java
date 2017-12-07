@@ -4,12 +4,16 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PointF;
+import android.os.Bundle;
+import android.os.Parcelable;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -19,6 +23,8 @@ import java.util.List;
 public class BoxDrawingView extends View {
 
     private static final String TAG = "BoxDrawingView";
+    private static final String PARENT_STATE_KEY = "parentStateKey";
+    private static final String BOXEN_KEY = "boxenKey";
 
     private Box mCurrentBox;
     private List<Box> mBoxen = new ArrayList<>();
@@ -41,6 +47,28 @@ public class BoxDrawingView extends View {
         //Paint the background off-white
         mBackgroundPaint = new Paint();
         mBackgroundPaint.setColor(0xfff8efe0);
+    }
+
+    @Nullable
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        Parcelable parentState = super.onSaveInstanceState();
+
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(PARENT_STATE_KEY, parentState);
+        bundle.putParcelableArray(BOXEN_KEY, mBoxen.toArray(new Box[mBoxen.size()]));
+
+        return bundle;
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        Bundle bundle = (Bundle) state;
+
+        super.onRestoreInstanceState(bundle.getParcelable(PARENT_STATE_KEY));
+
+        Box[] boxes = (Box[]) bundle.getParcelableArray(BOXEN_KEY);
+        mBoxen = new ArrayList<>(Arrays.asList(boxes));
     }
 
     @Override
