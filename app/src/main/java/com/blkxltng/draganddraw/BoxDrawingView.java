@@ -30,6 +30,9 @@ public class BoxDrawingView extends View {
     private List<Box> mBoxen = new ArrayList<>();
     private Paint mBoxPaint;
     private Paint mBackgroundPaint;
+    private Canvas currentCanvas;
+    private PointF boxOrigin;
+    private float rotation;
 
     //Used when creating the view in code
     public BoxDrawingView(Context context) {
@@ -73,8 +76,16 @@ public class BoxDrawingView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
+
+        currentCanvas = canvas;
+
+//        currentCanvas.save();
         //Fill the background
-        canvas.drawPaint(mBackgroundPaint);
+        currentCanvas.drawPaint(mBackgroundPaint);
+
+        if(boxOrigin != null) {
+            currentCanvas.rotate(rotation, boxOrigin.x, boxOrigin.y);
+        }
 
         for(Box box : mBoxen) {
             float left = Math.min(box.getOrigin().x, box.getCurrent().x);
@@ -82,8 +93,10 @@ public class BoxDrawingView extends View {
             float top = Math.min(box.getOrigin().y, box.getCurrent().y);
             float bottom = Math.max(box.getOrigin().y, box.getCurrent().y);
 
-            canvas.drawRect(left, top, right, bottom, mBoxPaint);
+            currentCanvas.drawRect(left, top, right, bottom, mBoxPaint);
         }
+
+//        currentCanvas.restore();
     }
 
     @Override
@@ -100,6 +113,7 @@ public class BoxDrawingView extends View {
                 //Reset drawing state
                 mCurrentBox = new Box(current);
                 mBoxen.add(mCurrentBox);
+                boxOrigin = current;
                 break;
             //Used for every touch after the first
             case MotionEvent.ACTION_POINTER_DOWN:
@@ -108,7 +122,11 @@ public class BoxDrawingView extends View {
                 if (actionIndex == 1) {
                     PointF current2 = new PointF(event.getX(actionIndex), event.getY(actionIndex));
                     if(mCurrentBox != null) {
-                        mCurrentBox.setOrigin(current2);
+//                        float degrees = getAngle(current2, mCurrentBox.getCurrent(), boxOrigin);
+//                        currentCanvas.save();
+//                        currentCanvas.rotate(degrees, boxOrigin.x, boxOrigin.y);
+//                        currentCanvas.restore();
+                        rotation = getAngle(current2, mCurrentBox.getCurrent(), boxOrigin);
                         invalidate();
                     }
                 }
@@ -130,16 +148,15 @@ public class BoxDrawingView extends View {
                         if(pointerId == 1)
                         {
                             PointF current2 = new PointF(event.getX(pointerIndex), event.getY(pointerIndex));
-                            mCurrentBox.setOrigin(current2);
+//                            mCurrentBox.setOrigin(current2);
+//                            float degrees = getAngle(current2, mCurrentBox.getCurrent(), boxOrigin);
+//                            currentCanvas.save();
+//                            currentCanvas.rotate(degrees);
+//                            currentCanvas.restore();
+                            rotation = getAngle(current2, mCurrentBox.getCurrent(), boxOrigin);
                             invalidate();
                         }
                     }
-//                    if (actionIndex == 1) {
-//                        PointF current2 = new PointF(event.getX(actionIndex), event.getY(actionIndex));
-//                        mCurrentBox.setOrigin(current2);
-//                    }
-//                    mCurrentBox.setCurrent(current);
-//                    invalidate();
                 }
                 break;
             case MotionEvent.ACTION_UP:
@@ -160,5 +177,21 @@ public class BoxDrawingView extends View {
         Log.i(TAG, action + " at x=" + current.x + ", y=" + current.y);
 
         return true;
+    }
+
+    public float getAngle(PointF target, PointF origin, PointF fixedPoint) {
+        double tX = target.x, tY = target.y;
+        double oX = origin.x, oY = origin.y;
+        double fPX = fixedPoint.x, fPY = fixedPoint.y;
+
+        double angle1 = Math.atan2(oY - fPY, oX - fPX);
+        double angle2 = Math.atan2(tY - fPY, tX - fPX);
+
+//        double angle1 = Math.atan2(255 - 433, 255 - 444);
+//        double angle2 = Math.atan2(tY - 433, tX - 444);
+
+        float degrees = (float) Math.toDegrees(angle2 - angle1);
+
+        return degrees;
     }
 }
