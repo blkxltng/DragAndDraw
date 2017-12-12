@@ -29,6 +29,10 @@ public class Box implements Parcelable {
         return mOrigin;
     }
 
+    public void setOrigin(PointF origin) {
+        mOrigin = origin;
+    }
+
     //Parceelable methods
     private Box (Parcel parcel) {
         mOrigin.readFromParcel(parcel);

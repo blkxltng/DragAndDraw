@@ -90,25 +90,67 @@ public class BoxDrawingView extends View {
     public boolean onTouchEvent(MotionEvent event) {
         PointF current = new PointF(event.getX(), event.getY());
         String action = "";
+        int actionIndex = event.getActionIndex();
 
-        switch (event.getAction()) {
+        switch (event.getActionMasked()) {
+            //Used for the first touch
             case MotionEvent.ACTION_DOWN:
                 action = "ACTION_DOWN";
+                Log.d(TAG, "Action Index: " + actionIndex);
                 //Reset drawing state
                 mCurrentBox = new Box(current);
                 mBoxen.add(mCurrentBox);
                 break;
+            //Used for every touch after the first
+            case MotionEvent.ACTION_POINTER_DOWN:
+                action = "ACTION_POINTER_DOWN";
+                Log.d(TAG, "Down - Action Index: "+ actionIndex);
+                if (actionIndex == 1) {
+                    PointF current2 = new PointF(event.getX(actionIndex), event.getY(actionIndex));
+                    if(mCurrentBox != null) {
+                        mCurrentBox.setOrigin(current2);
+                        invalidate();
+                    }
+                }
+                break;
             case MotionEvent.ACTION_MOVE:
                 action = "ACTION_MOVE";
                 if(mCurrentBox != null) {
-                    mCurrentBox.setCurrent(current);
-                    invalidate();
+                    int pointerCount = event.getPointerCount();
+                    for(int i = 0; i < pointerCount; ++i)
+                    {
+                        int pointerIndex = i;
+                        int pointerId = event.getPointerId(pointerIndex);
+                        Log.d("pointer id - move",Integer.toString(pointerId));
+                        if(pointerId == 0)
+                        {
+                            mCurrentBox.setCurrent(current);
+                            invalidate();
+                        }
+                        if(pointerId == 1)
+                        {
+                            PointF current2 = new PointF(event.getX(pointerIndex), event.getY(pointerIndex));
+                            mCurrentBox.setOrigin(current2);
+                            invalidate();
+                        }
+                    }
+//                    if (actionIndex == 1) {
+//                        PointF current2 = new PointF(event.getX(actionIndex), event.getY(actionIndex));
+//                        mCurrentBox.setOrigin(current2);
+//                    }
+//                    mCurrentBox.setCurrent(current);
+//                    invalidate();
                 }
                 break;
             case MotionEvent.ACTION_UP:
                 action = "ACTION_UP";
                 mCurrentBox = null;
                 break;
+            case MotionEvent.ACTION_POINTER_UP:
+                action = "ACTION_POINTER_UP";
+                Log.d(TAG, "Up - Action Index: " + actionIndex);
+                break;
+
             case MotionEvent.ACTION_CANCEL:
                 action = "ACTION_CANCEL";
                 mCurrentBox = null;
